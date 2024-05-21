@@ -15,8 +15,8 @@ from yt_dlp import YoutubeDL
 
 GROUP = "dlchinhub"
 
-@Client.on_message(filters.chat(GROUP) & filters.command(['song', 'mp3']))
-async def song(client, message: Message):
+@Client.on_message(filters.command(['song', 'mp3']))
+async def song(client, message):
    user_id = message.from_user.id 
    user_name = message.from_user.first_name 
    rpk = "["+user_name+"](tg://user?id="+str(user_id)+")"
