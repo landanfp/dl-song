@@ -15,7 +15,7 @@ from yt_dlp import YoutubeDL
 
 
 @Client.on_message(filters.command(['song', 'mp3']))
-async def song(client, message):
+async def song(client, message: Message):
     user_id = message.from_user.id 
     user_name = message.from_user.first_name 
     rpk = "["+user_name+"](tg://user?id="+str(user_id)+")"
