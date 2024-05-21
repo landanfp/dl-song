@@ -13,13 +13,14 @@ from youtube_search import YoutubeSearch
 from youtubesearchpython import SearchVideos
 from yt_dlp import YoutubeDL
 
+GROUP = "dlchinhub"
 
-@Client.on_message(filters.command(['song', 'mp3']))
+@Client.on_message(filters.chat(GROUP) & filters.command(['song', 'mp3']))
 async def song(client, message: Message):
-  #  user_id = message.from_user.id 
-  #  user_name = message.from_user.first_name 
- #   rpk = "["+user_name+"](tg://user?id="+str(user_id)+")"
- #   query = ''
+   user_id = message.from_user.id 
+   user_name = message.from_user.first_name 
+   rpk = "["+user_name+"](tg://user?id="+str(user_id)+")"
+   query = ''
     for i in message.command[1:]:
         query += ' ' + str(i)
     print(query)
