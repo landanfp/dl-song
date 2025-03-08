@@ -4,59 +4,67 @@
 
 
 from __future__ import unicode_literals
-
-import os, requests, asyncio, math, time, wget
+import os
+import requests
 from pyrogram import filters, Client
-from pyrogram.types import Message
-
-from youtube_search import YoutubeSearch
-from youtubesearchpython import SearchVideos
 from yt_dlp import YoutubeDL
-
-
 
 @Client.on_message(filters.command(['song', 'mp3']) & filters.group)
 async def song(client, message):
-   user_id = message.from_user.id 
-   user_name = message.from_user.first_name 
-   rpk = "["+user_name+"](tg://user?id="+str(user_id)+")"
-   query = ''
-    for i in message.command[1:]:
-        query += ' ' + str(i)
+    user_id = message.from_user.id 
+    user_name = message.from_user.first_name 
+    rpk = f"[{user_name}](tg://user?id={user_id})"
+    
+    query = ' '.join(message.command[1:])
     print(query)
     m = await message.reply(f"**🔎 در حال جست و جو ...\n {query}**")
-    ydl_opts = {"format": "bestaudio[ext=m4a]"}
+    
+    ydl_opts = {
+        "format": "bestaudio[ext=mp3]",
+        "postprocessors": [{
+            "key": "FFmpegAudioConvertor",
+            "preferredformat": "mp3",  # Convert audio to MP3
+        }],
+    }
+    
     try:
+        # Fetching YouTube video data
         results = YoutubeSearch(query, max_results=1).to_dict()
         link = f"https://youtube.com{results[0]['url_suffix']}"
-        title = results[0]["title"][:40]       
+        title = results[0]["title"][:40]
         thumbnail = results[0]["thumbnails"][0]
         thumb_name = f'thumb{title}.jpg'
         thumb = requests.get(thumbnail, allow_redirects=True)
         open(thumb_name, 'wb').write(thumb.content)
+
         performer = f"[IR_BOTZ™]" 
         duration = results[0]["duration"]
-        url_suffix = results[0]["url_suffix"]
-        views = results[0]["views"]
     except Exception as e:
         print(str(e))
         return await m.edit("ابتدا دستور /song را نوشته سپس نام آهنگ\nبدین صورت ↙️\n➡️ /song آرون افشار شب رویایی ")
-                
+    
     await m.edit("**📀 در حال آپلود ...😊**")
+    
     try:
+        # Downloading and processing the audio
         with YoutubeDL(ydl_opts) as ydl:
             info_dict = ydl.extract_info(link, download=False)
             audio_file = ydl.prepare_filename(info_dict)
             ydl.process_info(info_dict)
-
+        
         cap = "**<u>🎧 دانلود شده با [IR-BOTZ™](https://t.me/ir_AhangDLBot) </u>**"
-        secmul, dur, dur_arr = 1, 0, duration.split(':')
+        
+        # Converting duration from format hh:mm:ss to seconds
+        secmul, dur = 1, 0
+        dur_arr = duration.split(':')
         for i in range(len(dur_arr)-1, -1, -1):
-            dur += (int(dur_arr[i]) * secmul)
+            dur += int(dur_arr[i]) * secmul
             secmul *= 60
+        
+        # Send the MP3 audio file
         await message.reply_audio(
             audio_file,
-            caption=cap,            
+            caption=cap,
             quote=False,
             title=title,
             duration=dur,
@@ -64,25 +72,28 @@ async def song(client, message):
             thumb=thumb_name
         )            
         await m.delete()
+    
     except Exception as e:
         await m.edit("**🚫 𝙴𝚁𝚁𝙾𝚁 🚫**")
         print(e)
-    try:
-        os.remove(audio_file)
-        os.remove(thumb_name)
-    except Exception as e:
-        print(e)
+    
+    finally:
+        # Cleanup the temporary files
+        try:
+            os.remove(audio_file)
+            os.remove(thumb_name)
+        except Exception as e:
+            print(f"Error removing files: {e}")
 
-def get_text(message: Message) -> [None,str]:
+def get_text(message) -> [None,str]:
     text_to_return = message.text
-    if message.text is None:
-        return None
-    if " " not in text_to_return:
+    if message.text is None or " " not in text_to_return:
         return None
     try:
         return message.text.split(None, 1)[1]
     except IndexError:
         return None
+
 
 
 @Client.on_message(filters.command(["vidddeo", "m67p4"]))
